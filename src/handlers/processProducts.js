@@ -3,7 +3,7 @@ import { getEndedProducts } from '../lib/getEndedProducts';
 import { closeProduct } from '../lib/closeProducts';
 
 async function processProducts(event, context) {
-    try {        
+    try {
         const productsToClose = await getEndedProducts();
         const closePromises = productsToClose.map((product) => (closeProduct(product)));
         await Promise.all(closePromises);
@@ -12,7 +12,6 @@ async function processProducts(event, context) {
         console.log(error);
         throw new createError.InternalServerError(error);
     }
-
 }
 
 export const handler = processProducts;

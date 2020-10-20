@@ -9,7 +9,7 @@ export async function closeProduct(product) {
         Key: { id: product.id },
         UpdateExpression: 'set #status = :status',
         ExpressionAttributeValues: {
-            ':status': 'CLOSED',            
+            ':status': 'EXPIRED',
         },
         ExpressionAttributeNames: {
             '#status': 'status',
