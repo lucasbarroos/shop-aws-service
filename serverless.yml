@@ -1,0 +1,70 @@
+service:
+  name: product-service
+
+plugins:
+  - serverless-bundle
+  - serverless-pseudo-parameters
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  memorySize: 256
+  stage: ${opt:stage, 'dev'}
+  environment:
+    PRODUCTS_TABLE_NAME: ${self:custom.ProductsTable.name}
+    MAIL_QUEUE_URL: ${self:custom.MailQueue.url}
+  iamRoleStatements:
+    - ${file(iam/ProductsTable.yml):ProductsTableIAM}
+    - ${file(iam/MailQueueIAM.yml):MailQueueIAM}
+
+resources:
+  Resources:
+    ProductsTable: ${file(resources/ProductsTable.yml):ProductsTable}
+functions:
+  createProduct:
+    handler: src/handlers/createProduct.handler
+    events:
+      - http:
+          method: POST
+          path: /product
+          authorizer: ${self:custom.authorizer}
+          
+  getProducts:
+    handler: src/handlers/getProducts.handler
+    events:
+      - http:
+          method: GET
+          path: /products
+          authorizer: ${self:custom.authorizer}
+          
+  getProduct:
+    handler: src/handlers/getProduct.handler
+    events:
+      - http:
+          method: GET
+          path: /product/{id}
+          authorizer: ${self:custom.authorizer}
+
+  placeBid: 
+    handler: src/handlers/placeBid.handler
+    events:
+      - http:
+          method: PATCH
+          path: product/{id}/bid
+          authorizer: ${self:custom.authorizer}
+
+  processProducts: 
+    handler: src/handlers/processProducts.handler
+    # events: 
+    #   - schedule: rate(1 minute)    
+
+custom: 
+  authorizer: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:auth-service-${self:provider.stage}-auth
+  ProductsTable: 
+    name: !Ref ProductsTable
+    arn: !GetAtt ProductsTable.Arn
+  MailQueue:
+    arn: ${cf:notification-service-${self:provider.stage}.MailQueueArn}
+    url: ${cf:notification-service-${self:provider.stage}.MailQueueUrl}
+  bundle: 
+    linting: false

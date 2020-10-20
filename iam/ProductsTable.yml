@@ -1,0 +1,11 @@
+ProductsTableIAM:
+  Effect: Allow
+  Action:
+    - dynamodb:PutItem
+    - dynamodb:Scan
+    - dynamodb:GetItem
+    - dynamodb:UpdateItem
+    - dynamodb:Query
+  Resource:
+    - ${self:custom.ProductsTable.arn}
+    - !Join ['/', ['${self:custom.ProductsTable.arn}', 'index', 'statusAndEndDate']]
